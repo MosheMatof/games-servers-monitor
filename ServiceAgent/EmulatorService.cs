@@ -47,8 +47,7 @@ namespace ServiceAgent
             try
             {
                 var content = new StringContent(JsonConvert.SerializeObject(new { NumOfGames = numOfGames, NumOfServers = numOfServers, Interval = interval }), Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync(url, content).ConfigureAwait(false);
-
+                var response = _httpClient.PostAsync(url, content).Result;
                 if (!response.IsSuccessStatusCode)
                 {
                     var message = await response.Content.ReadAsStringAsync();

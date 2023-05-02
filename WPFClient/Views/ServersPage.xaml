@@ -2,14 +2,16 @@
     x:Class="WPFClient.Views.ServersPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:be="clr-namespace:BL.BE;assembly=BL.BE"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
     xmlns:lv="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
     xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:properties="clr-namespace:WPFClient.Properties"
     d:DesignHeight="450"
     d:DesignWidth="800"
-    Style="{DynamicResource MahApps.Styles.Page}"
+    Style="{DynamicResource CustomPage}"
     mc:Ignorable="d">
     <Page.Resources>
         <Style TargetType="lv:PieChart">
@@ -32,26 +34,100 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-        <DataTemplate x:Key="ItemTemplate">
-            <Grid Height="60">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <TextBlock
-                    Grid.Column="0"
-                    Margin="{StaticResource XSmallLeftMargin}"
-                    AutomationProperties.Name="List item name"
-                    Style="{StaticResource ListSubTitleStyle}"
-                    Text="{Binding Name}" />
-                <StackPanel
-                    Grid.Column="1"
-                    Margin="{StaticResource SmallLeftMargin}"
-                    VerticalAlignment="Center">
-                    <TextBlock Style="{StaticResource ListSubTitleStyle}" Text="{Binding GameMode}" />
-                    <TextBlock Style="{StaticResource ListSubTitleStyle}" Text="{Binding Id}" />
-                </StackPanel>
-            </Grid>
+        <Style x:Key="BorderStyle" TargetType="Border">
+            <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.Control.Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Margin" Value="{StaticResource SmallLeftTopRightBottomMargin}" />
+        </Style>
+        <DataTemplate x:Key="ItemTemplate" DataType="be:BEGameServer">
+            <Border Margin="2,2,2,2">
+                <Border.Style>
+                    <Style TargetType="{x:Type Border}" BasedOn="{StaticResource BorderStyle}">
+                        <Setter Property="Background" Value="Transparent" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                <Setter Property="Background" Value="LightGreen" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsRunning}" Value="False">
+                                <Setter Property="Background" Value="LightCoral" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <iconPacks:PackIconMaterial
+                        Grid.Column="0"
+                        Margin="10"
+                        VerticalAlignment="Center"
+                        Kind="Server">
+                        <iconPacks:PackIconMaterial.Triggers>
+                            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            Storyboard.TargetProperty="Opacity"
+                                            From="0"
+                                            To="1"
+                                            Duration="0:0:0.5" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </iconPacks:PackIconMaterial.Triggers>
+                    </iconPacks:PackIconMaterial>
+                    <TextBlock
+                        Grid.Column="1"
+                        Style="{StaticResource ListTitleStyle}"
+                        Text="{Binding Name}">
+                        <TextBlock.Triggers>
+                            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            BeginTime="0:0:0.1"
+                                            Storyboard.TargetProperty="Opacity"
+                                            From="0"
+                                            To="1"
+                                            Duration="0:0:0.5" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </TextBlock.Triggers>
+                    </TextBlock>
+                    <iconPacks:PackIconBootstrapIcons
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        Kind="PeopleFill" />
+                    <TextBlock
+                        Grid.Column="3"
+                        Margin="10,0"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource MahApps.Styles.TextBlock}"
+                        Text="{Binding CurrentPlayers}">
+                        <TextBlock.Triggers>
+                            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            BeginTime="0:0:0.3"
+                                            Storyboard.TargetProperty="Opacity"
+                                            From="0"
+                                            To="1"
+                                            Duration="0:0:0.5" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </TextBlock.Triggers>
+                    </TextBlock>
+                </Grid>
+            </Border>
         </DataTemplate>
 
         <DataTemplate x:Key="DetailTemplate">
@@ -65,46 +141,32 @@
                         DataContext="{Binding SelectedGameServer}"
                         Orientation="Horizontal">
                         <TextBlock
-                            AutomationProperties.Name="Detail icon"
-                            Style="{StaticResource BigIconStyle}"
-                            Text="{Binding Symbol}" />
-                        <TextBlock
-                            Margin="{StaticResource SmallLeftMargin}"
+                            Margin="{StaticResource SmallRightMargin}"
                             VerticalAlignment="Center"
                             Style="{StaticResource PageTitleStyle}"
                             Text="{Binding Name}" />
                     </StackPanel>
-                    <StackPanel Margin="{StaticResource SmallTopMargin}" DataContext="{Binding SelectedGameServer}">
-                        <TextBlock Style="{StaticResource SubtitleTextStyle}" Text="Game mode" />
-                        <TextBlock Style="{StaticResource BodyTextStyle}" Text="{Binding GameMode}" />
-                        <TextBlock
-                            Margin="{StaticResource SmallTopMargin}"
-                            Style="{StaticResource SubtitleTextStyle}"
-                            Text="Time" />
-                        <TextBlock Style="{StaticResource BodyTextStyle}" Text="{Binding TimeStamp}" />
-                        <TextBlock
-                            Margin="{StaticResource SmallTopMargin}"
-                            Style="{StaticResource SubtitleTextStyle}"
-                            Text="Temprature" />
-                        <TextBlock Style="{StaticResource BodyTextStyle}" Text="{Binding CpuTemperature}" />
-                        <TextBlock
-                            Margin="{StaticResource SmallTopMargin}"
-                            Style="{StaticResource SubtitleTextStyle}"
-                            Text="Speed" />
-                        <TextBlock Style="{StaticResource BodyTextStyle}" Text="{Binding CpuSpeed}" />
-                        <TextBlock
-                            Margin="{StaticResource SmallTopMargin}"
-                            Style="{StaticResource SubtitleTextStyle}"
-                            Text="Memory" />
-                        <TextBlock Style="{StaticResource BodyTextStyle}" Text="{Binding MemoryUsage}" />
+                    <Border Style="{StaticResource BorderStyle}">
+                        <StackPanel Margin="{StaticResource SmallTopMargin}" DataContext="{Binding SelectedGameServer}">
+                            <TextBlock Style="{StaticResource SubtitleTextStyle}" Text="Game mode" />
+                            <TextBlock Style="{StaticResource BodyTextStyle}" Text="{Binding GameMode}" />
+                            <TextBlock
+                                Margin="{StaticResource SmallTopMargin}"
+                                Style="{StaticResource SubtitleTextStyle}"
+                                Text="Last update" />
+                            <TextBlock Style="{StaticResource MahApps.Styles.TextBlock}" Text="{Binding TimeStamp}" />
+                            <StackPanel Orientation="Horizontal">
+                                <iconPacks:PackIconModern Margin="{StaticResource MediumTopMargin}" Kind="Link" />
+                                <Button
+                                    Margin="{StaticResource MediumTopMargin}"
+                                    Command="{Binding DataContext.NavigateToDetailCommand, RelativeSource={RelativeSource AncestorType={x:Type ContentControl}}}"
+                                    CommandParameter="{Binding GameId}"
+                                    Content="game details"
+                                    Style="{StaticResource MahApps.Styles.Button.Reveal}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
 
-                        <Button
-                            Margin="{StaticResource MediumTopMargin}"
-                            Command="{Binding DataContext.NavigateToDetailCommand, RelativeSource={RelativeSource AncestorType={x:Type ContentControl}}}"
-                            CommandParameter="{Binding GameId}"
-                            Content="game details"
-                            Style="{StaticResource MahApps.Styles.Button}" />
-                    </StackPanel>
                 </StackPanel>
             </ScrollViewer>
         </DataTemplate>
@@ -119,22 +181,39 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="35" />
-                        <RowDefinition Height="3*" />
-                    </Grid.RowDefinitions>
-                    <TextBlock
+                <Border Style="{StaticResource BorderStyle}" Background="{StaticResource MahApps.Brushes.SystemControlBackgroundAccent}">
+                    <Grid >
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="35" />
+                            <RowDefinition Height="3*" />
+                        </Grid.RowDefinitions>
+                        <TextBlock
                         Margin="{StaticResource SmallTopMargin}"
                         Style="{StaticResource SubtitleTextStyle}"
                         Text="Gamers data" />
-                    <lv:CartesianChart
+                        <Button Command="{Binding ShowLastedBarsGamersCommand}" HorizontalAlignment="Left"
+                            Style="{StaticResource MahApps.Styles.Button.Circle}"
+                            ToolTip="Show the 10 lasted values">
+                            <Button.Template>
+                                <ControlTemplate >
+                                    <iconPacks:PackIconForkAwesome Kind="History" />
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                        <lv:CartesianChart
                         Grid.Row="1"
                         MinHeight="250"
                         VerticalAlignment="Stretch"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
+                        LegendPosition="Left"
                         Series="{Binding GamersGraphData}"
-                        ZoomMode="Both" />
-                </Grid>
+                        XAxes="{Binding XAxesGamersGraph}"
+                        ZoomMode="X"
+                        />
+                    </Grid>
+                </Border>
+                
                 <StackPanel Grid.Column="1">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -157,7 +236,7 @@
                             InitialRotation="-225"
                             MaxAngle="270"
                             Series="{Binding GamersNumGaugeSeries}"
-                            Total="100" />
+                            Total="200" />
                     </Grid>
                     <Grid>
                         <Grid.RowDefinitions>
@@ -179,7 +258,7 @@
                             InitialRotation="-225"
                             MaxAngle="270"
                             Series="{Binding HighScoreGaugeSeries}"
-                            Total="100" />
+                            Total="150" />
                     </Grid>
                     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                         <Grid.RowDefinitions>
@@ -201,7 +280,7 @@
                             InitialRotation="-225"
                             MaxAngle="270"
                             Series="{Binding AvgScoreGaugeSeries}"
-                            Total="100" />
+                            Total="150" />
                     </Grid>
                 </StackPanel>
                 <Grid Grid.Row="1">
@@ -218,7 +297,7 @@
                         MinHeight="250"
                         VerticalAlignment="Stretch"
                         Series="{Binding HealthGraphData}"
-                        ZoomMode="Both" />
+                        ZoomMode="X" />
                 </Grid>
                 <ScrollViewer Grid.Row="1" Grid.Column="1">
                     <StackPanel>
@@ -291,7 +370,6 @@
                     </StackPanel>
                 </ScrollViewer>
             </Grid>
-
         </DataTemplate>
     </Page.Resources>
 
@@ -308,7 +386,6 @@
                 </Style.Triggers>
             </Style>
         </Grid.Resources>
-
         <Grid.ColumnDefinitions>
             <ColumnDefinition
                 Width="*"
@@ -317,6 +394,32 @@
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="3*" />
         </Grid.ColumnDefinitions>
+        <StackPanel
+                x:Name="LoadingIndicator"
+                Grid.Row="1"
+                Grid.ColumnSpan="3"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Margin="{StaticResource MediumTopMargin}">
+            <mah:ProgressRing Width="120" Height="120" />
+            <TextBlock
+                    HorizontalAlignment="Center" Margin="-10,0,-10,0"
+                    Style="{StaticResource PageTitleStyle}"
+                    Text="Loading servers..." />
+            <StackPanel.Style>
+                <Style TargetType="{x:Type StackPanel}">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding GameServers}" Value="{x:Null}">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding GameServers.Count}" Value="0">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+        </StackPanel>
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="48" />
@@ -328,31 +431,14 @@
                 Text="{x:Static properties:Resources.ServersPageTitle}" />
             <ListView
                 Grid.Row="1"
+                VerticalAlignment="Top"
                 d:ItemsSource="{d:SampleData ItemCount=5}"
                 AutomationProperties.Name="{x:Static properties:Resources.ServersListDescription}"
                 ItemTemplate="{StaticResource ItemTemplate}"
                 ItemsSource="{Binding GameServers}"
-                SelectedItem="{Binding SelectedGameServer, Mode=TwoWay}" />
-            <mah:ProgressRing
-                x:Name="LoadingIndicator"
-                Grid.Row="1"
-                Width="100"
-                Height="100"
-                Margin="{StaticResource MediumTopMargin}">
-                <mah:ProgressRing.Style>
-                    <Style TargetType="{x:Type mah:ProgressRing}">
-                        <Setter Property="Visibility" Value="Collapsed" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding GameServers}" Value="{x:Null}">
-                                <Setter Property="Visibility" Value="Visible" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding GameServers.Count}" Value="0">
-                                <Setter Property="Visibility" Value="Visible" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </mah:ProgressRing.Style>
-            </mah:ProgressRing>
+                SelectedItem="{Binding SelectedGameServer, Mode=TwoWay}" 
+                BorderThickness="0"
+                Background="Transparent"/>
         </Grid>
         <ContentControl
             Grid.Column="1"

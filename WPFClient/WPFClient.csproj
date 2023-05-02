@@ -10,18 +10,41 @@
   </PropertyGroup>
   
   <ItemGroup>
+    <None Remove="Assets\DarkBackground.jpeg" />
+    <None Remove="Assets\DarkBackground.png" />
+    <None Remove="Assets\DarkBackground2.png" />
+    <None Remove="Assets\Gaming_icon.png" />
+    <None Remove="Assets\Icon.png" />
+    <None Remove="Assets\LightBackground.jpeg" />
+    <None Remove="Assets\LightBackground.png" />
+    <None Remove="Styles\Themes\DrarkBackground.png" />
+  </ItemGroup>
+  
+  <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0-preview2" />
-    <PackageReference Include="CommunityToolkit.WinUI.Notifications" Version="7.1.2" />
     <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.0-beta.701" />
     <PackageReference Include="MahApps.Metro" Version="2.4.9" />
     <PackageReference Include="MahApps.Metro.IconPacks" Version="4.11.0" />
+    <PackageReference Include="MahApps.Metro.SimpleChildWindow" Version="2.2.1" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0-preview.2.23128.3" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
   </ItemGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\BL.BE\BL.BE.csproj" />
     <ProjectReference Include="..\ServiceAgent\ServiceAgent.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\DarkBackground2.png" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Resource Include="Assets\DarkBackground.png" />
+    <Resource Include="Assets\Gaming_icon.png" />
+    <Resource Include="Assets\Icon.png" />
+    <Resource Include="Assets\LightBackground.png" />
   </ItemGroup>
 
   <ItemGroup>

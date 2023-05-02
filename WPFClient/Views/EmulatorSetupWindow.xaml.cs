@@ -11,17 +11,19 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using WPFClient.ViewModels;
 
 namespace WPFClient.Views
 {
     /// <summary>
     /// Interaction logic for EmulatorSetupWindow.xaml
     /// </summary>
-    public partial class EmulatorSetupWindow : Window
+    public partial class EmulatorSetupWindow 
     {
-        public EmulatorSetupWindow()
+        public EmulatorSetupWindow(EmulatorSetupViewModel viewModel)
         {
             InitializeComponent();
+            DataContext = viewModel;
         }
     }
 }

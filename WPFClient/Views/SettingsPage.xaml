@@ -10,7 +10,7 @@
     xmlns:properties="clr-namespace:WPFClient.Properties"
     d:DesignHeight="450"
     d:DesignWidth="800"
-    Style="{DynamicResource MahApps.Styles.Page}"
+    Style="{DynamicResource CustomPage}"
     mc:Ignorable="d">
     <Page.Resources>
         <converters:EnumToBooleanConverter x:Key="EnumToBooleanConverter" EnumType="models:AppTheme" />

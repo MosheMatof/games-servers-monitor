@@ -19,6 +19,7 @@ using WPFClient.Messaging;
 using WPFClient.Contracts.Models;
 using System.Windows;
 using WPFClient.Contracts.Services;
+using WPFClient.Models;
 
 namespace WPFClient.ViewModels;
 
@@ -29,6 +30,7 @@ public partial class ServersViewModel : ObservableRecipient, INavigationAware
     private readonly IServerUpdate _serverUpdateModel;
     private readonly INavigationService _navigationService;
     private readonly IGame _gameModel;
+    private readonly Emulator _emulator;
 
     private bool isInitialized = false;
 
@@ -42,9 +44,21 @@ public partial class ServersViewModel : ObservableRecipient, INavigationAware
     [ObservableProperty]
     private ObservableCollection<ISeries> gamersGraphData;
 
-    private ColumnSeries<float> gamersNumColumn;
-    private ColumnSeries<float> highScoreColumn;
-    private ColumnSeries<float> avgScoreColumn;
+    private ColumnSeries<DateTimePoint> gamersNumColumn;
+    private ColumnSeries<DateTimePoint> highScoreColumn;
+    private ColumnSeries<DateTimePoint> avgScoreColumn;
+
+    public Axis[] XAxesGamersGraph { get; set; } =
+    {
+        new Axis
+        {
+            Labeler = value => value > 0? new DateTime((long) value).ToString("hh:mm:ss")
+            : new DateTime(0).ToString("hh:mm:ss"),
+            LabelsRotation = 30,
+            UnitWidth = TimeSpan.FromSeconds(10).Ticks,
+            MinStep = TimeSpan.FromSeconds(10).Ticks,
+        }
+    };
     #endregion
 
     #region Health graph properties
@@ -62,7 +76,7 @@ public partial class ServersViewModel : ObservableRecipient, INavigationAware
     [ObservableProperty]
     private IEnumerable<ISeries> cpuTempratureGaugeSeries;
     [ObservableProperty]
-    private IEnumerable<ISeries> memoryGaugeSeries;   
+    private IEnumerable<ISeries> memoryGaugeSeries;
     [ObservableProperty]
     private IEnumerable<ISeries> gamersNumGaugeSeries;
     [ObservableProperty]
@@ -79,13 +93,14 @@ public partial class ServersViewModel : ObservableRecipient, INavigationAware
 
     #endregion
 
-    public ServersViewModel(IHubConnectionService hubConnectionService,IGameServer gameServer,INavigationService navigationService,IServerUpdate serverUpdate, IGame game)
+    public ServersViewModel(IHubConnectionService hubConnectionService, IGameServer gameServer, INavigationService navigationService, IServerUpdate serverUpdate, IGame game, Emulator emulator)
     {
         _hubConnectionService = hubConnectionService;
         _gameServerModel = gameServer;
         _serverUpdateModel = serverUpdate;
         _navigationService = navigationService;
         _gameModel = game;
+        _emulator = emulator;
 
         serverUpdates = new();
         gameServers = new();
@@ -106,8 +121,15 @@ public partial class ServersViewModel : ObservableRecipient, INavigationAware
             {
                 await LoadGameServersAsync();
             });
+            isInitialized = true;
         }
+
         await UpdateGameServersAsync();
+
+        if (GameServers != null && GameServers.Count > 0 && SelectedGameServer != null)
+        {
+            await LoadServerUpdatesAsync();
+        }
     }
 
     public void OnNavigatedFrom()
@@ -119,6 +141,7 @@ public partial class ServersViewModel : ObservableRecipient, INavigationAware
     #region Load data
     private async Task LoadGameServersAsync()
     {
+        _hubConnectionService.SetTimeout(_emulator.intervalTime + 60);
         await foreach (var server in _hubConnectionService.GetAllAsync<BEGameServer>("GetServers"))
         {
             Application.Current.Dispatcher.Invoke(() =>
@@ -131,7 +154,9 @@ public partial class ServersViewModel : ObservableRecipient, INavigationAware
 
     private async Task LoadServerUpdatesAsync()
     {
-        await foreach (var serverUpdate in _hubConnectionService.GetAllLiveAsync<BEServerUpdate>("GetServerUpdates",handleLiveServerUpdate,SelectedGameServer.Id))
+        var lastUpdate = _serverUpdateModel[SelectedGameServer.Id].LastOrDefault();
+        var lastUpdateTime = lastUpdate?.TimeStamp ?? DateTime.MinValue;
+        await foreach (var serverUpdate in _hubConnectionService.GetAllLiveAsync<BEServerUpdate>("GetServerUpdates", handleLiveServerUpdate, SelectedGameServer.Id, lastUpdateTime))
         {
             serverUpdates.Add(serverUpdate);
             _serverUpdateModel[serverUpdate.ServerId].Add(serverUpdate);
@@ -140,18 +165,21 @@ public partial class ServersViewModel : ObservableRecipient, INavigationAware
 
     private void handleLiveServerUpdate(BEServerUpdate liveServerUpdate)
     {
-        serverUpdates.Add(liveServerUpdate);
-        _serverUpdateModel[liveServerUpdate.ServerId].Add(liveServerUpdate);
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            serverUpdates.Add(liveServerUpdate);
+            _serverUpdateModel[liveServerUpdate.ServerId].Add(liveServerUpdate);
+        });
     }
 
     private async Task UpdateGameServersAsync()
     {
-        throw new NotImplementedException();
+        //TODO
     }
 
     private void StopUpdateGameServersAsync()
     {
-        throw new NotImplementedException();
+        //TODO
     }
 
     #endregion
@@ -181,30 +209,20 @@ public partial class ServersViewModel : ObservableRecipient, INavigationAware
     {
         Task.Run(async () =>
         {
-            await LoadServerUpdatesAsync();
+            serverUpdates = new(_serverUpdateModel[value.Id]);
+            serverUpdates.CollectionChanged += ServerUpdates_CollectionChanged;
+            updateGraphs(serverUpdates);
+            updateGauges(serverUpdates.LastOrDefault());
 
-            updateGraphs(serverUpdates.Where(s => s.ServerId == value.Id));
-            CpuGaugeValue.Value = value.CpuSpeed;
+            await LoadServerUpdatesAsync();
         });
     }
 
-    private void OnPointMeasured(ChartPoint<float, RoundedRectangleGeometry, LabelGeometry> point)
+    private void ServerUpdates_CollectionChanged1(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
-        // Add animation to the visual of each data point
-        var visual = point.Visual;
-        if (visual is null) return;
-
-        var delayedFunction = new DelayedFunction(EasingFunctions.BuildCustomElasticOut(1.5f, 0.60f), point, 30f);
-
-        _ = visual
-            .TransitionateProperties(
-                nameof(visual.Y),
-                nameof(visual.Height))
-            .WithAnimation(animation =>
-                animation
-                    .WithDuration(delayedFunction.Speed)
-                    .WithEasingFunction(delayedFunction.Function));
+        throw new NotImplementedException();
     }
+
 
     #region Gauges methods
 
@@ -281,36 +299,42 @@ public partial class ServersViewModel : ObservableRecipient, INavigationAware
     private void initGraphs()
     {
         // Define the data for the graph
-        var gamersNumData = new List<float>();
-        var highScoreData = new List<float>();
-        var avgScoreData = new List<float>();
+        var gamersNumData = new List<DateTimePoint>();
+        var highScoreData = new List<DateTimePoint>();
+        var avgScoreData = new List<DateTimePoint>();
         var cpuSpeedData = new List<float>();
         var cpuTempratureData = new List<float>();
         var memoryUsageData = new List<float>();
 
         // Create the gamersGraphData for the graph
-        gamersNumColumn = new ColumnSeries<float>
+        gamersNumColumn = new ColumnSeries<DateTimePoint>
         {
             Name = "Number of Gamers",
+            TooltipLabelFormatter = (chartPoint) =>
+                $"Number of Gamers {chartPoint.PrimaryValue}",
             Values = gamersNumData,
             Stroke = null,
-            Padding = 2
+            Padding = TimeSpan.FromSeconds(10).Ticks,
         };
 
-        highScoreColumn = new ColumnSeries<float>
+        highScoreColumn = new ColumnSeries<DateTimePoint>
         {
             Name = "High Score",
+            TooltipLabelFormatter = (chartPoint) =>
+                $"High Score {chartPoint.PrimaryValue}",
             Values = highScoreData,
             Stroke = null,
-            Padding = 2
+            Padding = 20,
         };
 
-        avgScoreColumn = new ColumnSeries<float>
+        avgScoreColumn = new ColumnSeries<DateTimePoint>
         {
             Name = "Average Score",
+            TooltipLabelFormatter = (chartPoint) =>
+                $"Average Score {chartPoint.PrimaryValue}",
             Values = avgScoreData,
             Stroke = null,
-            Padding = 2
+            Padding = 20,
         };
 
         cpuSpeedColumn = new ColumnSeries<float>
@@ -326,8 +350,11 @@ public partial class ServersViewModel : ObservableRecipient, INavigationAware
             Name = "CPU Temprature",
             Values = cpuTempratureData,
             Stroke = null,
-            Padding = 2
-        };
+            Padding = 2,
+            Fill = new LinearGradientPaint(
+                new[] { SKColors.YellowGreen, SKColors.Red },
+                        new SKPoint(0.5f, 0), new SKPoint(0.5f, 1))
+        }; 
 
         memoryColumn = new ColumnSeries<float>
         {
@@ -341,9 +368,9 @@ public partial class ServersViewModel : ObservableRecipient, INavigationAware
         gamersNumColumn.PointMeasured += OnPointMeasured;
         highScoreColumn.PointMeasured += OnPointMeasured;
         avgScoreColumn.PointMeasured += OnPointMeasured;
-        cpuSpeedColumn.PointMeasured += OnPointMeasured;
-        cpuTempratureColumn.PointMeasured += OnPointMeasured;
-        memoryColumn.PointMeasured += OnPointMeasured;
+        //cpuSpeedColumn.PointMeasured += OnPointMeasured;
+        //cpuTempratureColumn.PointMeasured += OnPointMeasured;
+        //memoryColumn.PointMeasured += OnPointMeasured;
 
         //generates the graphs from the columns
         GamersGraphData = new ObservableCollection<ISeries> { gamersNumColumn, highScoreColumn, avgScoreColumn };
@@ -352,9 +379,9 @@ public partial class ServersViewModel : ObservableRecipient, INavigationAware
 
     private void updateGraphs(BEServerUpdate serverUpdate)
     {
-        gamersNumColumn.Values = gamersNumColumn.Values.Append(serverUpdate.CurrentPlayers);
-        highScoreColumn.Values = highScoreColumn.Values.Append(serverUpdate.HighScore);
-        avgScoreColumn.Values = avgScoreColumn.Values.Append(serverUpdate.AvgScore);
+        gamersNumColumn.Values = gamersNumColumn.Values.Append(new DateTimePoint(serverUpdate.TimeStamp, serverUpdate.CurrentPlayers));
+        highScoreColumn.Values = highScoreColumn.Values.Append(new DateTimePoint(serverUpdate.TimeStamp, serverUpdate.HighScore));
+        avgScoreColumn.Values = avgScoreColumn.Values.Append(new DateTimePoint(serverUpdate.TimeStamp, serverUpdate.AvgScore));
         GamersGraphData = new ObservableCollection<ISeries> { gamersNumColumn, highScoreColumn, avgScoreColumn };
 
         cpuSpeedColumn.Values = cpuSpeedColumn.Values.Append(serverUpdate.CpuSpeed);
@@ -366,15 +393,33 @@ public partial class ServersViewModel : ObservableRecipient, INavigationAware
 
     private void updateGraphs(IEnumerable<BEServerUpdate> serverUpdate)
     {
-        gamersNumColumn.Values = serverUpdate.Select(s => (float)s.CurrentPlayers);
-        highScoreColumn.Values = serverUpdate.Select(s => s.HighScore);
-        avgScoreColumn.Values = serverUpdate.Select(s => s.AvgScore);
+        gamersNumColumn.Values = serverUpdate.Select(s => new DateTimePoint(s.TimeStamp, s.CurrentPlayers));
+        highScoreColumn.Values = serverUpdate.Select(s => new DateTimePoint(s.TimeStamp, s.HighScore));
+        avgScoreColumn.Values = serverUpdate.Select(s => new DateTimePoint(s.TimeStamp, s.AvgScore));
         GamersGraphData = new ObservableCollection<ISeries> { gamersNumColumn, highScoreColumn, avgScoreColumn };
 
         cpuSpeedColumn.Values = serverUpdate.Select(s => s.CpuSpeed);
         cpuTempratureColumn.Values = serverUpdate.Select(s => s.CpuTemperature);
         memoryColumn.Values = serverUpdate.Select(s => s.MemoryUsage);
         HealthGraphData = new ObservableCollection<ISeries> { cpuSpeedColumn, cpuTempratureColumn, memoryColumn };
+    }
+
+    private void OnPointMeasured(ChartPoint<DateTimePoint, RoundedRectangleGeometry, LabelGeometry> point)
+    {
+        // Add animation to the visual of each data point
+        var visual = point.Visual;
+        if (visual is null) return;
+
+        var delayedFunction = new DelayedFunction(EasingFunctions.BuildCustomElasticOut(1.5f, 0.60f), point, 30f);
+
+        _ = visual
+            .TransitionateProperties(
+                nameof(visual.Y),
+                nameof(visual.Height))
+            .WithAnimation(animation =>
+                animation
+                    .WithDuration(delayedFunction.Speed)
+                    .WithEasingFunction(delayedFunction.Function));
     }
 
     #endregion
@@ -433,6 +478,13 @@ public partial class ServersViewModel : ObservableRecipient, INavigationAware
     {
         var game = _gameModel.Games.FirstOrDefault(g => g.IGDBId == gameId);
         _navigationService.NavigateTo(typeof(GamesDetailViewModel).FullName, game);
+    }
+    [RelayCommand]
+    private void ShowLastedBarsGamers()
+    {
+        var axis = XAxesGamersGraph[0];
+        var gap = (serverUpdates.Count - 10) * 10;
+        axis.MinLimit = gap > 0 ? TimeSpan.FromSeconds(gap).Ticks : null;
     }
 
     #endregion

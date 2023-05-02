@@ -6,10 +6,13 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ControlzEx;
 using MahApps.Metro.Controls;
+using MahApps.Metro.Controls.Dialogs;
 using MahApps.Metro.IconPacks;
+using MahApps.Metro.SimpleChildWindow;
 using Windows.Graphics.Printing3D;
 using WPFClient.Contracts.Services;
 using WPFClient.Properties;
+using WPFClient.Views;
 
 namespace WPFClient.ViewModels;
 
@@ -17,6 +20,7 @@ public class ShellViewModel : ObservableObject
 {
     private readonly INavigationService _navigationService;
     private readonly IWindowManagerService _windowManagerService;
+    private readonly EmulatorSetupWindow _emulatorSetupWindow;
 
     private HamburgerMenuItem _selectedMenuItem;
     private HamburgerMenuItem _selectedOptionsMenuItem;
@@ -62,16 +66,25 @@ public class ShellViewModel : ObservableObject
 
     public ICommand UnloadedCommand => _unloadedCommand ?? (_unloadedCommand = new RelayCommand(OnUnloaded));
 
-    public ShellViewModel(INavigationService navigationService, IWindowManagerService windowManagerService)
+    public ShellViewModel(INavigationService navigationService, IWindowManagerService windowManagerService, EmulatorSetupWindow emulatorSetupWindow)
     {
         _navigationService = navigationService;
         _windowManagerService = windowManagerService;
+        _emulatorSetupWindow = emulatorSetupWindow;
     }
 
-    private void OnLoaded()
+    private async void OnLoaded()
     {
         _navigationService.Navigated += OnNavigated;
-        _windowManagerService.OpenInDialog((typeof(EmulatorSetupViewModel).FullName));
+
+        var window = App.Current.MainWindow as MetroWindow;
+        var dialogResult = await window.ShowChildWindowAsync<bool?>(_emulatorSetupWindow);
+        if (dialogResult == null)
+            await window.ShowMessageAsync("Error", "Emulator setup failed.");
+        if (dialogResult == false)
+            await window.ShowMessageAsync("Attention", "the Emulator setup didn't complete, you can set it later in the stting, in order to see all the data and grapgs.");
+        if(dialogResult == true)
+            await window.ShowMessageAsync("Success", "Emulator setup completed.");
     }
 
     private void OnUnloaded()

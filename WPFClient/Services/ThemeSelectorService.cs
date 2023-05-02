@@ -1,7 +1,7 @@
 ﻿using System.Windows;
-
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using ControlzEx.Theming;
-
 using MahApps.Metro.Theming;
 
 using WPFClient.Contracts.Services;
@@ -16,6 +16,7 @@ public class ThemeSelectorService : IThemeSelectorService
 
     public ThemeSelectorService()
     {
+        ThemeManager.Current.ThemeChanged += ThemeManager_ThemeChanged;
     }
 
     public void InitializeTheme()
@@ -51,11 +52,36 @@ public class ThemeSelectorService : IThemeSelectorService
     {
         if (App.Current.Properties.Contains("Theme"))
         {
-            var themeName = App.Current.Properties["Theme"].ToString();
+            var themeName = Application.Current.Properties["Theme"].ToString();
             Enum.TryParse(themeName, out AppTheme theme);
             return theme;
         }
 
         return AppTheme.Default;
+    }
+
+    private void ThemeManager_ThemeChanged(object sender, ThemeChangedEventArgs e)
+    {
+        try
+        {
+            var window = Application.Current.MainWindow as Window;
+            if (window != null)
+            {
+                if (e.NewTheme.BaseColorScheme == "Dark")
+                {
+                    var backgroundBrush = Application.Current.Resources["DarkBackgroundBrush"] as ImageBrush;
+                    window.Background = backgroundBrush;
+                }
+                else
+                {
+                    var backgroundBrush = Application.Current.Resources["LightBackgroundBrush"] as ImageBrush;
+                    window.Background = backgroundBrush;
+                }
+            }
+        }
+        catch
+        {
+
+        }
     }
 }

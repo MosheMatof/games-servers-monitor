@@ -10,7 +10,7 @@
     xmlns:properties="clr-namespace:WPFClient.Properties"
     d:DesignHeight="450"
     d:DesignWidth="800"
-    Style="{DynamicResource MahApps.Styles.Page}"
+    Style="{DynamicResource CustomPage}"
     mc:Ignorable="d">
 
     <Page.Resources>
@@ -71,14 +71,18 @@
                     </i:Interaction.Behaviors>
                 </ListView>
             </ScrollViewer>
-            <mah:ProgressRing
+            <StackPanel
                 x:Name="LoadingIndicator"
                 Grid.Row="1"
-                Width="100"
-                Height="100"
-                Margin="{StaticResource MediumTopMargin}">
-                <mah:ProgressRing.Style>
-                    <Style TargetType="{x:Type mah:ProgressRing}">
+                Margin="{StaticResource MediumTopMargin}"
+                VerticalAlignment="Top">
+                <mah:ProgressRing Width="70" Height="70" />
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    Style="{StaticResource BaseTextBlockStyle}"
+                    Text="Loading games..." />
+                <StackPanel.Style>
+                    <Style TargetType="{x:Type StackPanel}">
                         <Setter Property="Visibility" Value="Collapsed" />
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Games}" Value="{x:Null}">
@@ -89,8 +93,8 @@
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
-                </mah:ProgressRing.Style>
-            </mah:ProgressRing>
+                </StackPanel.Style>
+            </StackPanel>
         </Grid>
         <Frame
             Name="DetailsFrame"

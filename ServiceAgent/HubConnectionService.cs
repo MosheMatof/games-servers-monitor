@@ -44,7 +44,6 @@ namespace ServiceAgent
             try
             {
                 await _connection.StartAsync(cancellationToken).ConfigureAwait(false);
-
                 if (_logger.IsEnabled(LogLevel.Information))
                 {
                     _logger.LogInformation("SignalR connection started successfully.");
@@ -90,21 +89,21 @@ namespace ServiceAgent
             _connection.On(methodName, handler);
         }
 
-        public async IAsyncEnumerable<T> GetAllAsync<T>(string methodName, object? arg = null)
+        public async IAsyncEnumerable<T> GetAllAsync<T>(string methodName, object? arg1 = null,object? arg2 = null)
         {
             if (_connection.State == HubConnectionState.Disconnected)
             {
                 await _connection.StartAsync();
             }
-            if (arg == null)
+            if (arg1 == null) //get GameServers
             await foreach (var obj in _connection.StreamAsync<string>(methodName))
             {
                 var deserializedObject = JsonSerializer.Deserialize<T>(obj);
                 if (deserializedObject != null)
                     yield return deserializedObject;
             }
-            else
-            await foreach (var obj in _connection.StreamAsync<string>(methodName, arg))
+            else            //get ServerUpdates
+            await foreach (var obj in _connection.StreamAsync<string>(methodName, arg1, arg2))
             {
                 var deserializedObject = JsonSerializer.Deserialize<T>(obj);
                 if (deserializedObject != null)
@@ -112,23 +111,28 @@ namespace ServiceAgent
             }   
         }
 
-        public async IAsyncEnumerable<T> GetAllLiveAsync<T>(string methodName, Action<T> handler, object? arg = null)
+        public async IAsyncEnumerable<T> GetAllLiveAsync<T>(string methodName, Action<T> handler, object? arg1 = null, object? arg2 = null)
         {
-            if (arg != null)
+            if (arg1 != null)
             {
-                _connection.On<string>(nameof(T), obj =>
+                _connection.On<string>("LiveServerUpdate", obj =>
                 {
                     var deserializedObject = JsonSerializer.Deserialize<T>(obj);
                     if (deserializedObject != null)
                         handler(deserializedObject);
                 });
             }
-            await foreach(var obj in GetAllAsync<T>(methodName, arg)) { yield return obj;}
+            await foreach(var obj in GetAllAsync<T>(methodName, arg1, arg2)) { yield return obj;}
         }
 
         public void StopLiveUpdate()
         {
             _connection.InvokeAsync("StopServerUpdates");
+        }
+
+        public void SetTimeout(int? timeout)
+        {
+            _connection.ServerTimeout = TimeSpan.FromSeconds(timeout ?? 60);
         }
 
         public async void Dispose()

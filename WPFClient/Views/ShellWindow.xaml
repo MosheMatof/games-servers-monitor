@@ -9,11 +9,17 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:properties="clr-namespace:WPFClient.Properties"
     xmlns:templateSelectors="clr-namespace:WPFClient.TemplateSelectors"
+    x:Name="metroWindow"
     Title="{x:Static properties:Resources.AppDisplayName}"
     MinWidth="500"
     MinHeight="350"
-    Style="{StaticResource CustomMetroWindow}"
+    Icon="/Assets/Icon.png"
+    Style="{DynamicResource CustomMetroWindow}"
+    Background="{StaticResource BackgroundBrush}"
     mc:Ignorable="d">
+    <!--<controls:MetroWindow.Background>
+        <ImageBrush ImageSource="/Assets/LightBackground.png" Stretch="Fill" />
+    </controls:MetroWindow.Background>-->
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Loaded">
             <i:InvokeCommandAction Command="{Binding LoadedCommand}" />
@@ -38,6 +44,32 @@
         </controls:WindowCommands>
     </controls:MetroWindow.LeftWindowCommands>
     <controls:MetroWindow.Resources>
+        <!--<Style
+            x:Key="themeStyle"
+            BasedOn="{StaticResource CustomMetroWindow}"
+            TargetType="{x:Type controls:MetroWindow}">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <ImageBrush ImageSource="/Assets/LightBackground.png" Stretch="Fill" />
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Foreground, ElementName=metroWindow}" Value="#FFFFFFFF">
+                    <Setter Property="Background">
+                        <Setter.Value>
+                            <ImageBrush ImageSource="/Assets/DarkBackground.png" Stretch="Fill" />
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Foreground, ElementName=metroWindow}" Value="#FF000000">
+                    <Setter Property="Background">
+                        <Setter.Value>
+                            <ImageBrush ImageSource="/Assets/LightBackground.png" Stretch="Fill" />
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>-->
         <templateSelectors:MenuItemTemplateSelector x:Key="MenuItemTemplateSelector">
             <templateSelectors:MenuItemTemplateSelector.IconDataTemplate>
                 <DataTemplate DataType="{x:Type controls:HamburgerMenuIconItem}">

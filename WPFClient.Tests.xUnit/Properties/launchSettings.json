@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "WPFClient.Tests.xUnit": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:49764;http://localhost:49766"
+    }
+  }
+}

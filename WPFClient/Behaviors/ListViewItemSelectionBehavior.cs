@@ -46,11 +46,18 @@ public class ListViewItemSelectionBehavior : Behavior<ListView>
 
     private void SelectItem(RoutedEventArgs args)
     {
-        if (Command != null
+        try
+        {
+            if (Command != null
             && args.OriginalSource is FrameworkElement selectedItem
             && Command.CanExecute(selectedItem.DataContext))
+            {
+                Command.Execute(selectedItem.DataContext);
+            }
+        }
+        catch
         {
-            Command.Execute(selectedItem.DataContext);
+            //massage box
         }
     }
 }
