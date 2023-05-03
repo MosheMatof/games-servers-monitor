@@ -9,10 +9,11 @@ namespace WPFClient.Models
 {
     public class Emulator
     {
-        public int numberOfServers { get; set; }
-        public int numberOfGames { get; set; }
-        public DateTime startDate { get; set; }
-        public int intervalTime { get; set; }
-        public bool isStarting { get; set; }
+        public int NumberOfServers { get; set; }
+        public int NumberOfGames { get; set; }
+        public DateTime StartDate { get; set; }
+        public int IntervalTime { get; set; }
+        public bool IsRunning { get; set; }
+        public bool IsInit { get; set; }
     }
 }

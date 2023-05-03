@@ -55,9 +55,9 @@ public class ListViewItemSelectionBehavior : Behavior<ListView>
                 Command.Execute(selectedItem.DataContext);
             }
         }
-        catch
+        catch(Exception ex)
         {
-            //massage box
+            var mas = ex.Message;
         }
     }
 }

@@ -6,6 +6,8 @@ using BL.BE;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using MahApps.Metro.Controls;
+using MahApps.Metro.Controls.Dialogs;
 using Microsoft.Extensions.DependencyInjection;
 using ServiceAgent.Contracts;
 using Windows.Networking.NetworkOperators;
@@ -95,7 +97,8 @@ public partial class GamesViewModel : ObservableRecipient, INavigationAware
         }
         else
         {
-            MessageBox.Show("ERROR: the game server model has not initialize yet");
+            var window = App.Current.MainWindow as MetroWindow;
+            await window.ShowMessageAsync("Error", "the game server model has not initialize yet");
         }
     }
 

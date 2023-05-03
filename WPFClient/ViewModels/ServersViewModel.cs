@@ -20,6 +20,10 @@ using WPFClient.Contracts.Models;
 using System.Windows;
 using WPFClient.Contracts.Services;
 using WPFClient.Models;
+using MahApps.Metro.Controls;
+using MahApps.Metro.Controls.Dialogs;
+using System.Linq.Expressions;
+using System.Windows.Data;
 
 namespace WPFClient.ViewModels;
 
@@ -32,13 +36,46 @@ public partial class ServersViewModel : ObservableRecipient, INavigationAware
     private readonly IGame _gameModel;
     private readonly Emulator _emulator;
 
+    private ReaderWriterLockSlim _sgsLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+    private ReaderWriterLockSlim _gsLock = new ReaderWriterLockSlim();
+
     private bool isInitialized = false;
 
     [ObservableProperty]
     private ObservableCollection<BEGameServer> gameServers;
+
     private ObservableCollection<BEServerUpdate> serverUpdates;
-    [ObservableProperty]
+
     private BEGameServer selectedGameServer;
+    public BEGameServer SelectedGameServer
+    {
+        get
+        {
+            _sgsLock.EnterReadLock();
+            try
+            {
+                return selectedGameServer;
+            }
+            finally
+            {
+                _sgsLock.ExitReadLock();
+            }
+        }
+        set
+        {
+            _sgsLock.EnterWriteLock();
+            try
+            {
+                selectedGameServer = value ?? selectedGameServer;
+            }
+            finally
+            {
+                _sgsLock.ExitWriteLock();
+                OnPropertyChanged(nameof(selectedGameServer));
+                OnSelectedGameServerChanged(value);
+            }
+        }
+    }
 
     #region Gamers graph properties
     [ObservableProperty]
@@ -111,44 +148,48 @@ public partial class ServersViewModel : ObservableRecipient, INavigationAware
         initGauges();
         //generateRandomData();
         //RegisterToGameMessage();
+
+        //BindingOperations.EnableCollectionSynchronization(GameServers, _gsLock);
     }
 
     public async void OnNavigatedTo(object parameter)
     {
-        if (!isInitialized)
+        try
         {
-            await Task.Run(async () =>
+            if (!isInitialized)
             {
-                await LoadGameServersAsync();
-            });
-            isInitialized = true;
+                await Task.Run(async () =>
+                {
+                    await LoadGameServersAsync();
+                });
+                isInitialized = true;
+            }
+
+            if (GameServers != null && GameServers.Count > 0 && SelectedGameServer != null)
+            {
+                await LoadServerUpdatesAsync();
+            }
         }
-
-        await UpdateGameServersAsync();
-
-        if (GameServers != null && GameServers.Count > 0 && SelectedGameServer != null)
+        catch (Exception ex)
         {
-            await LoadServerUpdatesAsync();
+            var window = App.Current.MainWindow as MetroWindow;
+            await window.ShowMessageAsync("Error", ex.Message);
         }
     }
 
     public void OnNavigatedFrom()
     {
         _hubConnectionService.StopLiveUpdate();
-        StopUpdateGameServersAsync();
     }
 
     #region Load data
     private async Task LoadGameServersAsync()
     {
-        _hubConnectionService.SetTimeout(_emulator.intervalTime + 60);
+        _hubConnectionService.SetTimeout(_emulator.IntervalTime + 60);
         await foreach (var server in _hubConnectionService.GetAllAsync<BEGameServer>("GetServers"))
         {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                GameServers.Add(server);
-                _gameServerModel.GameServers.Add(server);
-            });
+            Application.Current.Dispatcher.Invoke(() => { GameServers.Add(server); });
+            _gameServerModel.GameServers.Add(server);
         }
     }
 
@@ -158,28 +199,29 @@ public partial class ServersViewModel : ObservableRecipient, INavigationAware
         var lastUpdateTime = lastUpdate?.TimeStamp ?? DateTime.MinValue;
         await foreach (var serverUpdate in _hubConnectionService.GetAllLiveAsync<BEServerUpdate>("GetServerUpdates", handleLiveServerUpdate, SelectedGameServer.Id, lastUpdateTime))
         {
-            serverUpdates.Add(serverUpdate);
+            Application.Current.Dispatcher.Invoke(() => { serverUpdates.Add(serverUpdate); });
             _serverUpdateModel[serverUpdate.ServerId].Add(serverUpdate);
         }
     }
 
     private void handleLiveServerUpdate(BEServerUpdate liveServerUpdate)
     {
-        Application.Current.Dispatcher.Invoke(() =>
+        var serverId = liveServerUpdate.ServerId;
+        if (serverId == SelectedGameServer.Id)
         {
-            serverUpdates.Add(liveServerUpdate);
+            Application.Current.Dispatcher.Invoke(() => { serverUpdates.Add(liveServerUpdate); });
             _serverUpdateModel[liveServerUpdate.ServerId].Add(liveServerUpdate);
-        });
-    }
-
-    private async Task UpdateGameServersAsync()
-    {
-        //TODO
-    }
-
-    private void StopUpdateGameServersAsync()
-    {
-        //TODO
+        }
+        var oldServer = GameServers.FirstOrDefault(server => server.Id == serverId);
+        if (oldServer != null)
+        {
+            Application.Current.Dispatcher.InvokeAsync(() => 
+            { 
+                GameServers[serverId - 1] = new(oldServer.Update(liveServerUpdate));
+                OnPropertyChanged(nameof(GameServers));
+            });
+            _gameServerModel.GameServers.FirstOrDefault(server => server.Id == serverId).Update(liveServerUpdate);
+        }
     }
 
     #endregion
@@ -194,35 +236,37 @@ public partial class ServersViewModel : ObservableRecipient, INavigationAware
                 {
                     updateGraphs(serverUpdate);
                     updateGauges(serverUpdate);
-                    SelectedGameServer.CurrentPlayers = serverUpdate.CurrentPlayers;
-                    SelectedGameServer.CpuSpeed = serverUpdate.CpuSpeed;
-                    SelectedGameServer.CpuTemperature = serverUpdate.CpuTemperature;
-                    SelectedGameServer.IsRunning = serverUpdate.IsRunning;
-                    SelectedGameServer.MemoryUsage = serverUpdate.MemoryUsage;
-                    SelectedGameServer.AvgScore = serverUpdate.AvgScore;
+                    SelectedGameServer.Update(serverUpdate);
                 }
             }
         }
     }
 
-    partial void OnSelectedGameServerChanged(BEGameServer value)
+    private void OnSelectedGameServerChanged(BEGameServer value)
     {
-        Task.Run(async () =>
+        try
         {
-            serverUpdates = new(_serverUpdateModel[value.Id]);
-            serverUpdates.CollectionChanged += ServerUpdates_CollectionChanged;
-            updateGraphs(serverUpdates);
-            updateGauges(serverUpdates.LastOrDefault());
+            if (value == null)
+                return;
+            Task.Run(async () =>
+            {
+                serverUpdates = new(_serverUpdateModel[value.Id]);
+                serverUpdates.CollectionChanged += ServerUpdates_CollectionChanged;
+                updateGraphs(serverUpdates);
+                updateGauges(serverUpdates.LastOrDefault());
 
-            await LoadServerUpdatesAsync();
-        });
+                await LoadServerUpdatesAsync();
+            });
+        }
+        catch (Exception ex)
+        {
+            Task.Run(async () =>
+            {
+                var window = App.Current.MainWindow as MetroWindow;
+                await window.ShowMessageAsync("Error", ex.Message);
+            });
+        }
     }
-
-    private void ServerUpdates_CollectionChanged1(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-    {
-        throw new NotImplementedException();
-    }
-
 
     #region Gauges methods
 

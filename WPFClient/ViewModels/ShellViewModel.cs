@@ -42,7 +42,6 @@ public class ShellViewModel : ObservableObject
         set { SetProperty(ref _selectedOptionsMenuItem, value); }
     }
 
-    // TODO: Change the icons and titles for all HamburgerMenuItems here.
     public ObservableCollection<HamburgerMenuItem> MenuItems { get; } = new ObservableCollection<HamburgerMenuItem>()
     {
         new HamburgerMenuIconItem() { Label = Resources.ShellMainPage, Icon = PackIconMaterialKind.Home, TargetPageType = typeof(DashboardViewModel), },

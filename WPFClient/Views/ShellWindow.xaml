@@ -13,9 +13,10 @@
     Title="{x:Static properties:Resources.AppDisplayName}"
     MinWidth="500"
     MinHeight="350"
+    Background="{StaticResource BackgroundBrush}"
     Icon="/Assets/Icon.png"
     Style="{DynamicResource CustomMetroWindow}"
-    Background="{StaticResource BackgroundBrush}"
+    WindowState="Maximized"
     mc:Ignorable="d">
     <!--<controls:MetroWindow.Background>
         <ImageBrush ImageSource="/Assets/LightBackground.png" Stretch="Fill" />

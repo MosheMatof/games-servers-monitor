@@ -22,7 +22,6 @@ public class PageService : IPageService
         Configure<AnalyzeViewModel, AnalyzePage>();
         Configure<SettingsViewModel, SettingsPage>();
         Configure<GamesDetailViewModel, GamesDetailPage>();
-        Configure<EmulatorSetupViewModel,EmulatorSetupPage>();
     }
 
     public Type GetPageType(string key)

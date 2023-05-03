@@ -2,9 +2,11 @@
     x:Class="WPFClient.Views.SettingsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
     xmlns:converters="clr-namespace:WPFClient.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:WPFClient.Models"
     xmlns:properties="clr-namespace:WPFClient.Properties"
@@ -14,13 +16,18 @@
     mc:Ignorable="d">
     <Page.Resources>
         <converters:EnumToBooleanConverter x:Key="EnumToBooleanConverter" EnumType="models:AppTheme" />
+        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
     </Page.Resources>
-    <ScrollViewer>
+    <ScrollViewer Background="{StaticResource MahApps.Brushes.SystemControlPageBackgroundChromeMediumLow}">
         <Grid Margin="{StaticResource SmallTopBottomMargin}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="48" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
             <TextBlock Style="{StaticResource PageTitleStyle}" Text="{x:Static properties:Resources.SettingsPageTitle}" />
             <StackPanel
                 x:Name="ContentArea"
@@ -35,6 +42,7 @@
                     <TextBlock Style="{StaticResource BodyTextStyle}" Text="{x:Static properties:Resources.SettingsPageChooseThemeText}" />
                     <StackPanel Margin="{StaticResource XSmallTopMargin}">
                         <RadioButton
+                            Background="Transparent"
                             Content="{x:Static properties:Resources.SettingsPageRadioButtonLightTheme}"
                             FontSize="{StaticResource MediumFontSize}"
                             GroupName="AppTheme"
@@ -47,6 +55,7 @@
                         </RadioButton>
                         <RadioButton
                             Margin="{StaticResource XSmallTopMargin}"
+                            Background="Transparent"
                             Content="{x:Static properties:Resources.SettingsPageRadioButtonDarkTheme}"
                             FontSize="{StaticResource MediumFontSize}"
                             GroupName="AppTheme"
@@ -59,6 +68,7 @@
                         </RadioButton>
                         <RadioButton
                             Margin="{StaticResource XSmallTopMargin}"
+                            Background="Transparent"
                             Content="{x:Static properties:Resources.SettingsPageRadioButtonWindowsDefaultTheme}"
                             FontSize="{StaticResource MediumFontSize}"
                             GroupName="AppTheme"
@@ -94,6 +104,60 @@
                     </Hyperlink>
                 </TextBlock>
             </StackPanel>
+
+            <Border Grid.Row="1" Grid.Column="1">
+                <Grid Height="200" VerticalAlignment="Top">
+                    <!--  The label that displays the running state  -->
+                    <TextBlock Text="Emulator setup" Style="{StaticResource PageTitleStyle}" VerticalAlignment="Top"/>
+                    <!--<Label.Style>
+                            <Style TargetType="{x:Type Label}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                        <Setter Property="Foreground" Value="Green" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Label.Style>
+                    </Label>-->
+
+                    <StackPanel Orientation="Horizontal">
+                        <!--  The button to start or resume the emulator  -->
+                        <Button
+                            Name="StartResumeButton"
+                            Command="{Binding StartResumeCommand}"
+                            IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBooleanConverter}}">
+                            <Button.Style>
+                                <Style BasedOn="{StaticResource MahApps.Styles.Button.MetroSquare.Accent}" TargetType="{x:Type Button}">
+                                    <Setter Property="Content" Value="Start Emulator" />
+                                    <Setter Property="Margin" Value="{StaticResource MediumLeftTopRightBottomMargin}"/>
+                                    <Setter Property="Height" Value="40"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsInit}" Value="true">
+                                            <Setter Property="Content" Value="Resume Emulator" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                            <Setter Property="Content" Value="Emulator Running" />
+                                            <Setter Property="IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+
+                        <Button
+                            Name="StopButton"
+                            Command="{Binding StopCommand}"
+                            Content="Stop"
+                            IsEnabled="{Binding IsRunning}"
+                            Style="{StaticResource MahApps.Styles.Button.MetroSquare.Accent}" 
+                            Margin="{StaticResource MediumLeftTopRightBottomMargin}"
+                            Height="40"
+                           />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
         </Grid>
+
     </ScrollViewer>
 </Page>

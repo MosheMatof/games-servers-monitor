@@ -23,7 +23,7 @@ public partial class GamesDetailViewModel : ObservableObject, INavigationAware
         _gameModel = game;
     }
 
-    public async void OnNavigatedTo(object parameter)
+    public void OnNavigatedTo(object parameter)
     {
         if (parameter is BEGame game)
         {

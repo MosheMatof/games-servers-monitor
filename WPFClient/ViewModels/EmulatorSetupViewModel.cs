@@ -20,7 +20,7 @@ namespace WPFClient.ViewModels
     public partial class EmulatorSetupViewModel : ObservableValidator
     {
         private readonly IEmulatorService _emulatorService;
-        private readonly Emulator _emulator = new();
+        private readonly Emulator _emulator;
 
         //[ObservableProperty]
         //private int numericValue;
@@ -46,9 +46,10 @@ namespace WPFClient.ViewModels
         [ObservableProperty]
         private bool isStarting = false;
 
-        public EmulatorSetupViewModel(IEmulatorService emulatorService)
+        public EmulatorSetupViewModel(IEmulatorService emulatorService,Emulator emulator)
         {
             _emulatorService = emulatorService;
+            _emulator = emulator;
         }
         [RelayCommand]
         private void OnClose(object sender)
@@ -56,18 +57,12 @@ namespace WPFClient.ViewModels
             var window = sender as ChildWindow;
             if (IsStarting)
             {
-                if (!_emulator.isStarting)
-                {
-                    MessageBox.Show("Emulator is in initialize procces, please press cancel to stop it before closing", "Error");
-                    return;
-                }
-                else
-                {
-                    window.Close(childWindowResult: false);
-                }
+                MessageBox.Show("Emulator is in initialize procces, please press cancel to stop it before closing", "Error");
+                return;
             }
             else
             {
+                IsStarting = false;
                 window.Close(childWindowResult: false);
             }
         }
@@ -79,25 +74,28 @@ namespace WPFClient.ViewModels
             try
             {
                 IsStarting = true;
-                var success = await Task.Run(async () => await _emulatorService.StartEmulator(NumberOfGames, NumberOfServers, IntervalTime * 1000));
+                var success = await Task.Run(async () => await _emulatorService.StartEmulatorAsync(NumberOfGames, NumberOfServers, IntervalTime * 1000));
                 if (success)
                 {
-                    _emulator.numberOfGames = NumberOfGames;
-                    _emulator.numberOfServers = NumberOfServers;
-                    _emulator.intervalTime = IntervalTime;
-                    _emulator.startDate = StartDate;
-                    _emulator.isStarting = IsStarting;
+                    _emulator.NumberOfGames = NumberOfGames;
+                    _emulator.NumberOfServers = NumberOfServers;
+                    _emulator.IntervalTime = IntervalTime;
+                    _emulator.StartDate = StartDate;
+                    _emulator.IsRunning = IsStarting;
+                    _emulator.IsInit = IsStarting;
                 }
+                IsStarting = false;
                 window.Close(success);
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Error");
+                IsStarting = false;
                 window.Close(childWindowResult: null);
             }
         }
         [RelayCommand]
-        private void Cancel(object sender)
+        private async Task Cancel(object sender)
         {
             var window = sender as ChildWindow;
             if (IsStarting)
@@ -105,10 +103,15 @@ namespace WPFClient.ViewModels
                 var result = MessageBox.Show("Are you sure you want to stop the emulator?", "Confirmation", MessageBoxButton.YesNo);
                 if (result == MessageBoxResult.Yes)
                 {
-                    _emulatorService.StopEmulator();
-                    IsStarting = false;
+                    if(_emulator.IsRunning)
+                    {
+                        await _emulatorService.StopEmulatorAsync();
+                        _emulator.IsRunning = false;
+                        IsStarting = false;
+                    }
                 }
             }
+            IsStarting = false;
             window.Close(childWindowResult: false);
         }
     }

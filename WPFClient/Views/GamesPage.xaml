@@ -65,7 +65,8 @@
                     AutomationProperties.Name="{x:Static properties:Resources.GamesListDescription}"
                     ItemTemplate="{StaticResource ItemTemplate}"
                     ItemsSource="{Binding Games}"
-                    SelectedItem="{Binding SelectedGame, Mode=TwoWay}">
+                    SelectedItem="{Binding SelectedGame, Mode=TwoWay}"
+                    VerticalAlignment="Top">
                     <i:Interaction.Behaviors>
                         <behaviors:ListViewItemSelectionBehavior Command="{Binding NavigateToDetailCommand}" />
                     </i:Interaction.Behaviors>

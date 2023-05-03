@@ -35,7 +35,7 @@
                             Margin="{StaticResource SmallLeftMargin}"
                             Style="{StaticResource PageTitleStyle}"
                             Text="{Binding Game.Name}" />
-                        <TextBlock>
+                        <TextBlock Margin="{StaticResource MediumLeftMargin}">
                             <Hyperlink NavigateUri="{Binding Game.Link}">
                                 See more details
                             </Hyperlink>

@@ -16,7 +16,7 @@ public class AnalyzeViewModel : ObservableObject, INavigationAware
     {
     }
 
-    public async void OnNavigatedTo(object parameter)
+    public void OnNavigatedTo(object parameter)
     {
 
     }

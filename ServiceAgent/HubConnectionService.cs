@@ -115,6 +115,10 @@ namespace ServiceAgent
         {
             if (arg1 != null)
             {
+                // Remove all existing handlers before registering the new one
+                _connection.Remove("LiveServerUpdate");
+
+                // Register the new call
                 _connection.On<string>("LiveServerUpdate", obj =>
                 {
                     var deserializedObject = JsonSerializer.Deserialize<T>(obj);

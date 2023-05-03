@@ -4,11 +4,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
     xmlns:IconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+    xmlns:behaviors="clr-namespace:WPFClient.Behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
     xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:local="clr-namespace:WPFClient.Converters"
-    xmlns:behaviors="clr-namespace:WPFClient.Behaviors"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:simpleChildWindow="clr-namespace:MahApps.Metro.SimpleChildWindow;assembly=MahApps.Metro.SimpleChildWindow"
     Title="Emulator Setup"
@@ -16,10 +16,10 @@
     BorderThickness="1"
     ChildWindowMinHeight="300"
     ChildWindowMinWidth="500"
-    IsOpen="True"
-    ShowCloseButton="True"
     CloseButtonCommand="{Binding DataContext.OnCloseCommand, RelativeSource={RelativeSource Self}}"
     CloseButtonCommandParameter="{Binding Mode=OneWay, RelativeSource={RelativeSource Self}}"
+    IsOpen="True"
+    ShowCloseButton="True"
     mc:Ignorable="d">
     <simpleChildWindow:ChildWindow.Resources>
         <Style x:Key="SlideInAnimationStyle" TargetType="TextBlock">
@@ -40,10 +40,10 @@
             </Style.Triggers>
             <Setter Property="Margin" Value="{StaticResource SmallLeftTopRightBottomMargin}" />
         </Style>
-        <local:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+        <local:InverseBooleanConverter x:Key="InverseBooleanConverter" />
     </simpleChildWindow:ChildWindow.Resources>
     <Grid>
-        <Grid >
+        <Grid>
             <Grid.Resources>
                 <local:InverseBooleanConverter x:Key="InverseBooleanConverter" />
                 <Style TargetType="{x:Type TextBox}">
@@ -93,8 +93,8 @@
                     <Setter Property="HorizontalAlignment" Value="Center" />
                     <Setter Property="Width" Value="135" />
                     <Setter Property="FontSize" Value="16" />
-                    <Setter Property="FontWeight" Value="Bold"/>
-                    <Setter Property="IsEnabled" Value="{Binding IsStarting, Converter={StaticResource InverseBooleanConverter}}"/>
+                    <Setter Property="FontWeight" Value="Bold" />
+                    <Setter Property="IsEnabled" Value="{Binding IsStarting, Converter={StaticResource InverseBooleanConverter}}" />
                     <Style.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="BorderBrush" Value="{DynamicResource AccentColorBrush2}" />
@@ -157,6 +157,7 @@
                 Margin="{StaticResource SmallTopBottomMargin}"
                 HorizontalAlignment="Center"
                 SelectedDateFormat="Long"
+                IsEnabled="{Binding IsStarting, Converter={StaticResource InverseBooleanConverter}}"
                 SelectedDateTime="{Binding StartDate, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, ValidatesOnExceptions=True}" />
             <TextBlock
                 Grid.Row="3"
@@ -187,31 +188,32 @@
                     Command="{Binding StartEmulatorCommand}"
                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type simpleChildWindow:ChildWindow}}}"
                     Content="Start Emulator"
-                    Style="{StaticResource MahApps.Styles.Button.Dialogs.Accent}" 
-                    IsEnabled="{Binding IsStarting, Converter={StaticResource InverseBooleanConverter}}"/>
+                    IsEnabled="{Binding IsStarting, Converter={StaticResource InverseBooleanConverter}}"
+                    Style="{StaticResource MahApps.Styles.Button.Dialogs.Accent}" />
             </StackPanel>
 
         </Grid>
-        <Controls:ProgressRing IsActive="{Binding IsStarting}"
-                               Width="100" Height="100"
-                               Foreground="{StaticResource MahApps.Brushes.Accent}"
-                               Background="Transparent"
-                               Visibility="{Binding IsStarting, Converter={StaticResource BooleanToVisibilityConverter}}"
-                               BorderThickness="5"
-                               >
-                    <Controls:ProgressRing.Style>
-                        <Style TargetType="{x:Type Controls:ProgressRing}">
-                            <Style.Triggers>
-                                <Trigger Property="IsActive" Value="True">
-                                    <Setter Property="RenderTransform">
-                                        <Setter.Value>
-                                            <RotateTransform />
-                                        </Setter.Value>
-                                    </Setter>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Controls:ProgressRing.Style>
-                </Controls:ProgressRing>
-        </Grid>
+        <Controls:ProgressRing
+            Width="100"
+            Height="100"
+            Background="Transparent"
+            BorderThickness="5"
+            Foreground="{StaticResource MahApps.Brushes.Accent}"
+            IsActive="{Binding IsStarting}"
+            Visibility="{Binding IsStarting, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Controls:ProgressRing.Style>
+                <Style TargetType="{x:Type Controls:ProgressRing}">
+                    <Style.Triggers>
+                        <Trigger Property="IsActive" Value="True">
+                            <Setter Property="RenderTransform">
+                                <Setter.Value>
+                                    <RotateTransform />
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Controls:ProgressRing.Style>
+        </Controls:ProgressRing>
+    </Grid>
 </simpleChildWindow:ChildWindow>

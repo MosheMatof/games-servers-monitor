@@ -9,7 +9,8 @@ namespace ServiceAgent.Contracts
 {
     public interface IEmulatorService //: IHostedService, IDisposable
     {
-        Task<bool> StartEmulator(int numOfGames, int numOfServers, int interval);
-        void StopEmulator();
+        Task<bool> StartEmulatorAsync(int numOfGames, int numOfServers, int interval);
+        Task<bool> ResumeEmulatorAsync();
+        Task<bool> StopEmulatorAsync();
     }
 }
