@@ -31,14 +31,15 @@ namespace GamesServersMonitor.App.Api.Controllers
                 try
                 {
                     var gameIds = await _getGamesService.GetNewGamesAsync(numOfGames);
-                    await _emulatorService.StartAsync(numOfServers, gameIds, interval, succsess =>
+                    var tcs = new TaskCompletionSource<IActionResult>();
+                    _emulatorService.StartAsync(numOfServers, gameIds, interval, success =>
                     {
-                        if (succsess)
-                            return Ok();
+                        if (success)
+                            tcs.SetResult(Ok());
                         else
-                            return BadRequest();
-                    }).ConfigureAwait(false);
-                    return Ok();
+                            tcs.SetResult(BadRequest());
+                    });
+                    return await tcs.Task;
                 }
                 catch (Exception ex)
                 {
@@ -48,6 +49,27 @@ namespace GamesServersMonitor.App.Api.Controllers
             else
             {
                 return BadRequest("Invalid request data");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Resume()
+        {
+            try 
+            { 
+                var tcs = new TaskCompletionSource<IActionResult>();
+                _emulatorService.ResumeAsync(success =>
+                {
+                    if (success)
+                        tcs.SetResult(Ok());
+                    else
+                        tcs.SetResult(BadRequest());
+                });
+                return await tcs.Task;
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
             }
         }
 

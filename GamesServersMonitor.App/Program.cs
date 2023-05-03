@@ -9,19 +9,14 @@ using System.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using GamesServersMonitor.Domain.Entities;
 using GamesServersMonitor.Infrastructure.Messaging.RabbitMQ;
+using GamesServersMonitor.Infrastructure.Messaging.MediatR;
+using MediatR;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddMyDbContext(builder.Configuration.GetConnectionString("DefaultConnection"));
 
-
-builder.Services.AddScoped<IEmulatorService, EmulatorService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-
-builder.Services.AddHttpClient<IEmulatorService, EmulatorService>(HttpClient =>
-{
-    HttpClient.BaseAddress = new Uri("http://localhost:5000/");
-});
 
 builder.Services.AddSingleton<ConnectionFactory>(sp =>
 {
@@ -46,7 +41,28 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining(typeof(ServerUpdate)));
+
+
+//builder.Services.AddSingleton<EmulatorService>();
+//builder.Services.AddSingleton<IEmulatorService>(sp => sp.GetRequiredService<EmulatorService>());
+//builder.Services.AddSingleton<IRequestHandler<ServerUpdateRequest>>(sp => sp.GetRequiredService<EmulatorService>());
+
+builder.Services.AddSingleton<IEmulatorService, EmulatorService>();
+
+builder.Services.AddSingleton<IRequestHandler<ServerUpdateRequest>,EmulatorRequestHandler>();
+
+builder.Services.AddSingleton<IRequestHandler<ServerUpdateResponse>, ServerHub>();
+builder.Services.AddMediatR(cfg =>
+{ cfg.RegisterServicesFromAssemblyContaining(typeof(EmulatorService));
+  cfg.Lifetime = ServiceLifetime.Singleton;
+});
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining(typeof(ServerHub)));
+
+builder.Services.AddHttpClient<IEmulatorService, EmulatorService>(HttpClient =>
+{
+    HttpClient.BaseAddress = new Uri("http://localhost:5000/");
+});
+
 
 
 var app = builder.Build();

@@ -1,40 +1,70 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
+﻿using System.Collections.Generic;
 using System.Reflection.Metadata;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Text.Json;
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.WebApiCompatShim;
 using Newtonsoft.Json;
-using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using GamesServersMonitor.Domain.Contracts.Services;
 using GamesServersMonitor.Domain.Entities;
 using GamesServersMonitor.Infrastructure.Messaging.MediatR;
 using MediatR;
+using Newtonsoft.Json.Linq;
+using GamesServersMonitor.Infrastructure;
 
 namespace GamesServersMonitor.App.Services
 {
-    public class EmulatorService : IEmulatorService, IRequestHandler<ServerUpdateRequest>
+    public class EmulatorService : IEmulatorService
     {
         private readonly ILogger<EmulatorService> _logger;
-        private readonly IUnitOfWork _Uow;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly HttpClient _httpClient;
         private readonly IMediator _mediator;
 
         private CancellationTokenSource? _cancellationTokenSource;
+        private static bool isInit = false;
 
-        private ServerUpdateRequest updateRequest { get; set; } = new() { Stop = true };
+        private static ServerUpdateRequest _updateRequest = new() { Stop = true};
+        private ReaderWriterLockSlim cacheLock = new ReaderWriterLockSlim();
 
-        public EmulatorService(ILogger<EmulatorService> logger, IUnitOfWork uow, HttpClient httpClient, IMediator mediator)
+
+        private ServerUpdateRequest updateRequest 
+        {
+            get
+            {
+                cacheLock.EnterReadLock();
+                try
+                {
+                    return _updateRequest;
+                }
+                finally
+                {
+                    cacheLock.ExitReadLock();
+                }
+            }
+            set 
+            { 
+                cacheLock.EnterWriteLock();
+                try
+                {
+                    _updateRequest = value;
+                    var status = value.Stop ? "Stop" : "Start";
+                    _logger.LogInformation($"{status} sending live update");
+                }
+                finally
+                {
+                    cacheLock.ExitWriteLock();
+                }
+            }
+        }
+
+        public EmulatorService(ILogger<EmulatorService> logger, IServiceScopeFactory serviceScopeFactory, HttpClient httpClient, IMediator mediator)
         {
             _logger = logger;
-            _Uow = uow;
             _httpClient = httpClient;
+            _serviceScopeFactory = serviceScopeFactory;
             _mediator = mediator;
         }
 
@@ -44,18 +74,60 @@ namespace GamesServersMonitor.App.Services
         /// <param name="numOfServers">The number of game servers to initialize in the emulator.</param>
         /// <param name="gameIds">The list of game IDs to use for the game servers.</param>
         /// <param name="_interval">The polling interval, in milliseconds.</param>
-        public async Task StartAsync(int numOfServers, List<int> gameIds, int _interval, Func<bool, IActionResult> callback)
+        public async Task StartAsync(int numOfServers, List<int> gameIds, int _interval, Action<bool> callback)
+        {
+            await StartResumeAsync(callback, numOfServers, gameIds, _interval);
+        }
+
+        public async Task ResumeAsync(Action<bool> callback)
+        {
+            await StartResumeAsync(callback, resumeEmulator: true);
+        }
+
+        public async Task<string> StopAsync()
+        {
+            _cancellationTokenSource?.Cancel();
+            var response = await _httpClient.PostAsync("stop_emulator", null).ConfigureAwait(false);
+            //_httpClient?.Dispose();
+            return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        }
+
+        #region private methods
+        private async Task StartResumeAsync(Action<bool> callback, int numOfServers = 0, List<int>? gameIds = null, int _interval = 10, bool resumeEmulator = false)
         {
             #region init
-            // Initialize the game servers
-            var gameServers = await InitEmulatorAsync(numOfServers, gameIds);
-            if(gameServers != null &&  gameServers.Count == numOfServers)
+
+            if (resumeEmulator)
             {
+                if (!isInit)
+                {
+                    callback(false);
+                    return;
+                }
                 callback(true);
             }
             else
             {
-                throw new InvalidOperationException("No game servers found! Please start the emulator first.");
+                // Initialize the game servers
+                List<GameServer> gameServers;
+                try
+                {
+                    gameServers = await InitEmulatorAsync(numOfServers, gameIds);
+                }
+                catch (Exception ex)
+                {
+                    callback(obj: false);
+                    throw new InvalidOperationException(ex.Message);
+                }
+                if (gameServers != null && gameServers.Count == numOfServers)
+                {
+                    callback(obj: true);
+                }
+                else
+                {
+                    callback(obj: false);
+                    throw new InvalidOperationException("No game servers found! Please start the emulator first.");
+                }
             }
             #endregion
 
@@ -64,8 +136,16 @@ namespace GamesServersMonitor.App.Services
 
             try
             {
+                string requestUrl ="";
                 // Create the request URL with the interval
-                var requestUrl = $"start_emulator?interval={_interval}";
+                if (resumeEmulator)
+                {
+                    requestUrl = $"resume_emulator?interval={_interval}";
+                }
+                else
+                {
+                    requestUrl = $"start_emulator?interval={_interval}";
+                }
 
                 // Send the HTTP GET request to the server with the cancellation token
                 using var response = await _httpClient.GetAsync(requestUrl, HttpCompletionOption.ResponseHeadersRead, _cancellationTokenSource.Token).ConfigureAwait(false);
@@ -124,27 +204,22 @@ namespace GamesServersMonitor.App.Services
             if (serverUpdate != null)
             {
                 // Send the server update to the mediator
-                if (!updateRequest.Stop && updateRequest.ServerId == serverUpdate.ServerId)
+                if (!updateRequest.Stop) // && updateRequest.ServerId == serverUpdate.ServerId)
                 {
                     var serverUpdateResponse = new ServerUpdateResponse { ServerUpdate = serverUpdate };
                     await _mediator.Send(serverUpdateResponse).ConfigureAwait(false);
                 }
 
                 // Add the server update to the database and save changes
+                using var scope = _serviceScopeFactory.CreateScope();
+                var _Uow = scope.ServiceProvider.GetService<IUnitOfWork>();
+
                 await _Uow.ServerUpdateRepository.AddAsync(serverUpdate).ConfigureAwait(false);
                 await _Uow.SaveAsync().ConfigureAwait(false);
 
                 // Log a message with the server update
                 _logger.LogInformation("Server update received for server id: {@serverUpdate.ServerId}", serverUpdate.ServerId);
             }
-        }
-
-        public async Task<string> StopAsync()
-        {
-            _cancellationTokenSource?.Cancel();
-            var response = await _httpClient.PostAsync("stop_emulator", null).ConfigureAwait(false);
-            //_httpClient?.Dispose();
-            return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
         }
 
         /// <summary>
@@ -165,10 +240,12 @@ namespace GamesServersMonitor.App.Services
             var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
 
             var response = await _httpClient.PostAsync("init_emulator", content).ConfigureAwait(false);
-
-
+            
             if (response.IsSuccessStatusCode)
             {
+                using var scope = _serviceScopeFactory.CreateScope();
+                var _Uow = scope.ServiceProvider.GetService<IUnitOfWork>();
+
                 var gameServersJson = await response.Content.ReadAsStringAsync();
                 var gameServers = JsonConvert.DeserializeObject<IEnumerable<GameServer>>(gameServersJson);
 
@@ -179,6 +256,7 @@ namespace GamesServersMonitor.App.Services
                 await _Uow.SaveAsync().ConfigureAwait(false);
 
                 _logger.LogInformation("Emulator initialized successfully with {numOfServers} servers and {gameIdsCount} game IDs.", numOfServers, gameIds.Count);
+                isInit = true;
 
                 return gameServers.ToList();
             }
@@ -191,6 +269,7 @@ namespace GamesServersMonitor.App.Services
                 throw new Exception(message);
             }
         }
+        #endregion
 
         public Task Handle(ServerUpdateRequest request, CancellationToken cancellationToken)
         {
