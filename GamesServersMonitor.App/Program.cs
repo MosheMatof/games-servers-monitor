@@ -11,6 +11,7 @@ using GamesServersMonitor.Domain.Entities;
 using GamesServersMonitor.Infrastructure.Messaging.RabbitMQ;
 using GamesServersMonitor.Infrastructure.Messaging.MediatR;
 using MediatR;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +34,12 @@ builder.Services.AddSingleton<ConnectionFactory>(sp =>
     };
     return factory;
 });
+//builder.Services.AddStackExchangeRedisCache(options =>
+//{
+//    options.Configuration = builder.Configuration["Redis"];
+//});
+
+//builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(builder.Configuration["Redis"]));
 
 builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>();
 builder.Services.AddSingleton<IGetGamesService, GetGamesService>();
