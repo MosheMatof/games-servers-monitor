@@ -3,7 +3,7 @@ from quart import Quart, jsonify, request, Response, has_request_context
 import logging
 import uvicorn
 
-import emulator_generator
+import ServersEmulator.emulator_generator as emulator_generator
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s')
 
