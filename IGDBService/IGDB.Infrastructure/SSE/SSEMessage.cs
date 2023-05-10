@@ -8,9 +8,9 @@ namespace IGDB.Infrastructure.SSE
 {
     public class SSEMessage
     {
-        public string Event { get; set; }
-        public string Id { get; set; }
-        public string Data { get; set; }
+        public string? Event { get; set; }
+        public string? Id { get; set; }
+        public string? Data { get; set; }
 
         public override string ToString()
         {
