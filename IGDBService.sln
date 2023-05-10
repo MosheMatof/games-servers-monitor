@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33502.453
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IGDB.Api", "IGDB.Api\IGDB.Api.csproj", "{F0D74E2F-57ED-4522-B31D-FE214D2284A3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IGDB.Api", "IGDBService\IGDB.Api\IGDB.Api.csproj", "{6C8D5C96-83A4-4AD0-88A9-C98622FB3F30}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IGDB.Domain", "IGDB.Domain\IGDB.Domain.csproj", "{C1B9E3A3-0721-4660-95D7-DF36438CED6B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IGDB.Domain", "IGDBService\IGDB.Domain\IGDB.Domain.csproj", "{08FCAF25-B178-4471-9872-151A83712A4F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IGDB.Infrastructure", "IGDB.Infrastructure\IGDB.Infrastructure.csproj", "{D3733148-E0F8-477E-9A03-CD4C3D230322}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IGDB.Infrastructure", "IGDBService\IGDB.Infrastructure\IGDB.Infrastructure.csproj", "{47886F93-BD21-42AE-A128-6AE6D75B5089}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,18 +15,18 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{F0D74E2F-57ED-4522-B31D-FE214D2284A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F0D74E2F-57ED-4522-B31D-FE214D2284A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F0D74E2F-57ED-4522-B31D-FE214D2284A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F0D74E2F-57ED-4522-B31D-FE214D2284A3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C1B9E3A3-0721-4660-95D7-DF36438CED6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C1B9E3A3-0721-4660-95D7-DF36438CED6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C1B9E3A3-0721-4660-95D7-DF36438CED6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C1B9E3A3-0721-4660-95D7-DF36438CED6B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D3733148-E0F8-477E-9A03-CD4C3D230322}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D3733148-E0F8-477E-9A03-CD4C3D230322}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D3733148-E0F8-477E-9A03-CD4C3D230322}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D3733148-E0F8-477E-9A03-CD4C3D230322}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C8D5C96-83A4-4AD0-88A9-C98622FB3F30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C8D5C96-83A4-4AD0-88A9-C98622FB3F30}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C8D5C96-83A4-4AD0-88A9-C98622FB3F30}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C8D5C96-83A4-4AD0-88A9-C98622FB3F30}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08FCAF25-B178-4471-9872-151A83712A4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08FCAF25-B178-4471-9872-151A83712A4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08FCAF25-B178-4471-9872-151A83712A4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08FCAF25-B178-4471-9872-151A83712A4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{47886F93-BD21-42AE-A128-6AE6D75B5089}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47886F93-BD21-42AE-A128-6AE6D75B5089}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47886F93-BD21-42AE-A128-6AE6D75B5089}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47886F93-BD21-42AE-A128-6AE6D75B5089}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

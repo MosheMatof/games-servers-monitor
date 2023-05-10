@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using IGDB;
 using IGDB.Api.Services;
 using IGDB.Domain.Contracts;
-using IGDB.Infrastructure.SSH;
+using IGDB.Infrastructure.SSE;
 using System.Text.Json;
 using RestEase;
 
