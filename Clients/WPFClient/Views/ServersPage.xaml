@@ -146,7 +146,7 @@
                             Style="{StaticResource PageTitleStyle}"
                             Text="{Binding Name}" />
                     </StackPanel>
-                    <Border Style="{StaticResource BorderStyle}">
+                    <Border Style="{StaticResource BorderStyle}" Padding="10">
                         <StackPanel Margin="{StaticResource SmallTopMargin}" DataContext="{Binding SelectedGameServer}">
                             <TextBlock Style="{StaticResource SubtitleTextStyle}" Text="Game mode" />
                             <TextBlock Style="{StaticResource BodyTextStyle}" Text="{Binding GameMode}" />
@@ -162,6 +162,7 @@
                                     Command="{Binding DataContext.NavigateToDetailCommand, RelativeSource={RelativeSource AncestorType={x:Type ContentControl}}}"
                                     CommandParameter="{Binding GameId}"
                                     Content="game details"
+                                    FontSize="16"
                                     Style="{StaticResource MahApps.Styles.Button.Reveal}" />
                             </StackPanel>
                         </StackPanel>
