@@ -16,7 +16,7 @@ This project is a game server monitoring system that retrieves data from game se
    - [Docker](#docker)
 
 the architecture diagram:
-![Main diagram](https://github.com/MosheMatof/games-servers-monitor/assets/73488759/ebf6725a-2a90-48dd-bbca-fd95ae4926a9)
+![Main diagram](https://github.com/MosheMatof/games-servers-monitor/assets/73488759/4aac1253-2d18-449b-b43d-e4a4bd73354d)
 
 ### <a name="repositories"></a>Repositories
 
@@ -42,7 +42,7 @@ Key features:
 - MediatR, RabbitMQ, and SignalR for messaging
 
 The service diagram:
-![GamesMonitorService diagram](https://github.com/MosheMatof/games-servers-monitor/assets/73488759/ccef5f5d-9e89-4ce6-8f45-7ec1cfa926cb)
+![GamesMonitorService diagram](https://github.com/MosheMatof/games-servers-monitor/assets/73488759/2558627c-104a-4bed-884f-0461ed3a2c88)
 
 #### <a name="igdb-service"></a>IGDB Service
 
@@ -55,9 +55,9 @@ This service is responsible for retrieving game data from the IGDB API and downl
 The WPF app is built using the MVVM architecture and utilizes the CommunityToolkit.Mvvm package for observable properties, commands, messaging, etc. The app displays graphs and information about the servers and the game.
 | light mode                 | dark mode                 |
 | :---------------------: | :---------------------: |
-|![graphs](https://github.com/MosheMatof/games-servers-monitor/assets/73488759/466b76a8-6430-4632-9ec7-75dae6bdb261) |![graphs-dark mode](https://github.com/MosheMatof/games-servers-monitor/assets/73488759/ea0f12e3-0ed1-4436-b327-bfb6d15f3e60)|
+|![graphs](https://github.com/MosheMatof/games-servers-monitor/assets/73488759/d18398a4-f455-4426-b4d7-31cd5f2e3e40) |![graphs-dark mode](https://github.com/MosheMatof/games-servers-monitor/assets/73488759/40773640-c7b7-4944-9eb2-18a89a51adfd)|
 | emulator setup                 | games details                 |
-|![start emulator](https://github.com/MosheMatof/games-servers-monitor/assets/73488759/c01ff763-1337-4265-916a-9e8327415114) | ![games](https://github.com/MosheMatof/games-servers-monitor/assets/73488759/8cd9351d-bd95-411a-9fe8-9d21a028c00c) |
+|![start emulator](https://github.com/MosheMatof/games-servers-monitor/assets/73488759/e3949d51-d5d3-4e8a-8753-44e947079c61)| ![games](https://github.com/MosheMatof/games-servers-monitor/assets/73488759/752f2d8d-f543-48e3-a84f-9a31f242ca78) |
 
 #### <a name="service-agent"></a>Service Agent
 
